@@ -1,0 +1,435 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum UserRole {
+  ADMIN
+  INSTRUCTOR
+  KID
+  PARENT
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+}
+
+enum SessionKind {
+  NORMAL
+  MAKE_UP
+}
+
+enum InstructorFeedbackStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id            String      @id @default(cuid())
+  email         String      @unique
+  name          String?
+  role          UserRole
+  passwordHash String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+
+  adminProfile       AdminProfile?
+  instructorProfile  InstructorProfile?
+  kidProfile         KidProfile?
+  parentProfile      ParentProfile?
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope              String?
+  id_token           String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model AdminProfile {
+  id        String @id @default(cuid())
+  userId    String @unique
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  approvedInstructorFeedback InstructorFeedback[] @relation("InstructorFeedbackApprovedByAdmin")
+  iceShowsCreatedByAdmin      IceShow[] @relation("IceShowCreatedByAdmin")
+}
+
+model InstructorProfile {
+  id        String @id @default(cuid())
+  userId    String @unique
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  classSessionInstructors ClassSessionInstructor[]
+  endCards                 SessionEndCard[]
+  feedbackReceived         InstructorFeedback[] @relation("InstructorFeedbackTo")
+  showPartInstructors      IceShowPartInstructor[]
+}
+
+model ParentProfile {
+  id        String @id @default(cuid())
+  userId    String @unique
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName String?
+  createdAt DateTime @default(now())
+
+  kidLinks ParentKid[]
+  feedbackCreated InstructorFeedback[] @relation("InstructorFeedbackFrom")
+}
+
+model KidProfile {
+  id             String  @id @default(cuid())
+  userId         String  @unique
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName    String
+  currentLevelId String?
+  createdAt      DateTime @default(now())
+
+  currentLevel Level? @relation(fields: [currentLevelId], references: [id])
+
+  parents ParentKid[]
+  enrollments KidSessionEnrollment[]
+  attendanceRecords AttendanceRecord[]
+  endCards SessionEndCard[]
+  iceShowEnrollments IceShowEnrollment[]
+}
+
+model ParentKid {
+  parentId String
+  kidId    String
+
+  parent ParentProfile @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  kid    KidProfile     @relation(fields: [kidId], references: [id], onDelete: Cascade)
+
+  @@id([parentId, kidId])
+}
+
+model RinkMap {
+  id          String @id @default(cuid())
+  name        String
+  imageUrl    String @default("/rink.png")
+  createdAt   DateTime @default(now())
+
+  iceLocations IceLocation[]
+}
+
+model IceLocation {
+  id        String  @id @default(cuid())
+  rinkMapId String
+  name      String
+
+  // Simple rectangle overlay for MVP (percent-based).
+  // Coordinates can be left blank if using future zone mapping.
+  xPercent  Float?
+  yPercent  Float?
+  wPercent  Float?
+  hPercent  Float?
+
+  rinkMap RinkMap @relation(fields: [rinkMapId], references: [id], onDelete: Cascade)
+
+  classSessions ClassSession[]
+  showParts     IceShowPart[]
+}
+
+model Level {
+  id           String @id @default(cuid())
+  name         String
+  sortOrder    Int    @default(0)
+  nextLevelId  String?
+
+  nextLevel Level? @relation("LevelNext", fields: [nextLevelId], references: [id])
+  prevLevels Level[] @relation("LevelNext")
+
+  levelSkills LevelSkill[]
+  classSessions ClassSession[]
+  kids          KidProfile[]
+}
+
+model LevelSkill {
+  id          String @id @default(cuid())
+  levelId     String
+  description String
+  sortOrder   Int    @default(0)
+  isCritical  Boolean @default(true)
+
+  level Level @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  endCardSkills EndCardSkill[]
+
+  @@unique([levelId, sortOrder])
+}
+
+model ClassTemplate {
+  id          String @id @default(cuid())
+  name        String
+  dayOfWeek   Int    // 0-6 (Sun-Sat)
+  startTime   String // "18:30"
+  endTime     String // "19:20"
+
+  sessionGroups ClassSession[]
+  occurrences   ClassOccurrence[]
+
+  createdAt DateTime @default(now())
+}
+
+model ClassSession {
+  id              String @id @default(cuid())
+  classTemplateId String
+  levelId         String
+  iceLocationId   String
+
+  classTemplate ClassTemplate @relation(fields: [classTemplateId], references: [id], onDelete: Cascade)
+  level         Level         @relation(fields: [levelId], references: [id])
+  iceLocation   IceLocation   @relation(fields: [iceLocationId], references: [id])
+
+  instructorLinks ClassSessionInstructor[]
+  sessionOccurrences ClassSessionOccurrence[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([classTemplateId, levelId])
+}
+
+model ClassSessionInstructor {
+  id String @id @default(cuid())
+  classSessionId String
+  instructorId String
+
+  classSession ClassSession @relation(fields: [classSessionId], references: [id], onDelete: Cascade)
+  instructor InstructorProfile @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+
+  @@unique([classSessionId, instructorId])
+}
+
+model ClassOccurrence {
+  id String @id @default(cuid())
+  classTemplateId String
+  date DateTime
+
+  classTemplate ClassTemplate @relation(fields: [classTemplateId], references: [id], onDelete: Cascade)
+  sessionOccurrences ClassSessionOccurrence[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([classTemplateId, date])
+}
+
+model ClassSessionOccurrence {
+  id String @id @default(cuid())
+
+  classOccurrenceId String
+  classSessionId String
+
+  kind SessionKind @default(NORMAL)
+  sourceSessionOccurrenceId String? // for make-up
+
+  classOccurrence ClassOccurrence @relation(fields: [classOccurrenceId], references: [id], onDelete: Cascade)
+  classSession ClassSession @relation(fields: [classSessionId], references: [id])
+
+  enrollments KidSessionEnrollment[]
+  attendanceRecords AttendanceRecord[]
+  endCards SessionEndCard[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([classOccurrenceId, classSessionId])
+}
+
+model KidSessionEnrollment {
+  id String @id @default(cuid())
+
+  kidId String
+  sessionOccurrenceId String
+  enrolledByAdminId String?
+
+  kid KidProfile @relation(fields: [kidId], references: [id], onDelete: Cascade)
+  sessionOccurrence ClassSessionOccurrence @relation(fields: [sessionOccurrenceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([kidId, sessionOccurrenceId])
+}
+
+model AttendanceRecord {
+  id String @id @default(cuid())
+
+  sessionOccurrenceId String
+  kidId String
+
+  status AttendanceStatus
+  note String?
+  updatedAt DateTime @updatedAt
+
+  sessionOccurrence ClassSessionOccurrence @relation(fields: [sessionOccurrenceId], references: [id], onDelete: Cascade)
+  kid KidProfile @relation(fields: [kidId], references: [id], onDelete: Cascade)
+
+  // MVP make-ups are stored as attendance metadata (no separate enrollment workflow yet).
+  isMakeUp Boolean @default(false)
+  makeUpOriginalReference String? // human-readable reference to the missed class
+  makeUpNotes String?
+
+  @@unique([sessionOccurrenceId, kidId])
+}
+
+model SessionEndCard {
+  id String @id @default(cuid())
+
+  sessionOccurrenceId String
+  kidId String
+  instructorId String
+
+  passed Boolean
+  instructorNote String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessionOccurrence ClassSessionOccurrence @relation(fields: [sessionOccurrenceId], references: [id], onDelete: Cascade)
+  kid KidProfile @relation(fields: [kidId], references: [id], onDelete: Cascade)
+  instructor InstructorProfile @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+
+  acquiredSkills EndCardSkill[]
+
+  @@unique([sessionOccurrenceId, kidId])
+}
+
+model EndCardSkill {
+  id String @id @default(cuid())
+
+  endCardId String
+  levelSkillId String
+
+  acquired Boolean
+  note String?
+
+  endCard SessionEndCard @relation(fields: [endCardId], references: [id], onDelete: Cascade)
+  levelSkill LevelSkill @relation(fields: [levelSkillId], references: [id], onDelete: Cascade)
+
+  @@unique([endCardId, levelSkillId])
+}
+
+model InstructorFeedback {
+  id String @id @default(cuid())
+
+  fromParentId String
+  toInstructorId String
+  sessionOccurrenceId String?
+
+  rating Int // 1-5
+  message String
+
+  status InstructorFeedbackStatus @default(PENDING)
+  createdAt DateTime @default(now())
+
+  approvedAt DateTime?
+  approvedByAdminId String?
+  approvedByAdmin AdminProfile? @relation(fields: [approvedByAdminId], references: [id], name: "InstructorFeedbackApprovedByAdmin")
+
+  fromParent ParentProfile @relation(fields: [fromParentId], references: [id], name: "InstructorFeedbackFrom")
+  toInstructor InstructorProfile @relation(fields: [toInstructorId], references: [id], name: "InstructorFeedbackTo")
+
+  @@index([toInstructorId, status])
+}
+
+model IceShow {
+  id String @id @default(cuid())
+  title String
+  date DateTime
+  startTime String
+  endTime String
+
+  notes String?
+
+  createdByAdminId String
+  createdByAdmin AdminProfile @relation(fields: [createdByAdminId], references: [id], onDelete: Restrict, name: "IceShowCreatedByAdmin")
+
+  parts IceShowPart[]
+  createdAt DateTime @default(now())
+
+  @@index([date])
+}
+
+model IceShowPart {
+  id String @id @default(cuid())
+  iceShowId String
+
+  name String
+  iceLocationId String
+
+  startTime String?
+  endTime String?
+  createdAt DateTime @default(now())
+
+  iceShow IceShow @relation(fields: [iceShowId], references: [id], onDelete: Cascade)
+  iceLocation IceLocation @relation(fields: [iceLocationId], references: [id])
+
+  instructors IceShowPartInstructor[]
+  enrollments IceShowEnrollment[]
+
+  @@unique([iceShowId, name])
+}
+
+model IceShowPartInstructor {
+  id String @id @default(cuid())
+  iceShowPartId String
+  instructorId String
+
+  iceShowPart IceShowPart @relation(fields: [iceShowPartId], references: [id], onDelete: Cascade)
+  instructor InstructorProfile @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+
+  @@unique([iceShowPartId, instructorId])
+}
+
+model IceShowEnrollment {
+  id String @id @default(cuid())
+  iceShowPartId String
+  kidId String
+
+  iceShowPart IceShowPart @relation(fields: [iceShowPartId], references: [id], onDelete: Cascade)
+  kid KidProfile @relation(fields: [kidId], references: [id], onDelete: Cascade)
+
+  @@unique([iceShowPartId, kidId])
+}

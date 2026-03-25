@@ -2,15 +2,21 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn, signOut } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 
 export default function Navbar() {
   const router = useRouter();
   const { data, status } = useSession();
   const role = (data?.user as any)?.role as string | undefined;
+  const [mounted, setMounted] = useState(false);
 
   const isAuthed = status === "authenticated" && !!data?.user;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   function goToDashboard() {
     if (!role) return router.push("/login");
@@ -34,7 +40,7 @@ export default function Navbar() {
         </div>
 
         <nav className="flex items-center gap-3">
-          {!isAuthed ? (
+          {!mounted ? (
             <>
               <Link
                 href="/login"
@@ -49,9 +55,7 @@ export default function Navbar() {
                 Sign up
               </Link>
             </>
-          ) : null}
-
-          {isAuthed ? (
+          ) : isAuthed ? (
             <>
               <button
                 type="button"
@@ -68,7 +72,22 @@ export default function Navbar() {
                 Sign out
               </button>
             </>
-          ) : null}
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-sm text-sky-900/80 hover:text-sky-950"
+              >
+                Login
+              </Link>
+              <Link
+                href="/signup"
+                className="text-sm rounded bg-sky-600 text-white px-3 py-1.5 hover:bg-sky-700"
+              >
+                Sign up
+              </Link>
+            </>
+          )}
         </nav>
       </div>
     </header>

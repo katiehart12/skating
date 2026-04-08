@@ -127,7 +127,7 @@ export default function AdminDashboard() {
                   Skills: {lvl.levelSkills.length}
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {lvl.levelSkills.slice(0, 10).map((s) => (
+                  {lvl.levelSkills.map((s) => (
                     <span
                       key={s.id}
                       className="text-xs border rounded px-2 py-1 bg-zinc-50"

@@ -11,7 +11,7 @@ type EnrollmentRow = {
   attendanceStatus: "PRESENT" | "ABSENT" | "LATE" | null;
 };
 
-type LevelSkill = { id: string; description: string; sortOrder?: number };
+type LevelSkill = { id: string; description: string; note?: string | null; sortOrder?: number };
 
 type EndCard = {
   id: string;
@@ -203,13 +203,19 @@ export default function InstructorSessionOccurrencePage() {
                     {levelSkills.map((ls) => {
                       const checked = endState.acquiredSkillIds.includes(ls.id);
                       return (
-                        <label key={ls.id} className="flex items-center gap-2 text-sm">
+                        <label key={ls.id} className="flex items-start gap-2 text-sm cursor-pointer">
                           <input
                             type="checkbox"
                             checked={checked}
                             onChange={() => toggleSkill(e.kidId, ls.id)}
+                            className="mt-0.5 shrink-0"
                           />
-                          {ls.description}
+                          <span>
+                            <span className="font-medium">{ls.description}</span>
+                            {ls.note ? (
+                              <span className="block text-xs text-zinc-500 mt-0.5">{ls.note}</span>
+                            ) : null}
+                          </span>
                         </label>
                       );
                     })}

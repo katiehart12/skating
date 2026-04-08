@@ -191,10 +191,11 @@ model Level {
 }
 
 model LevelSkill {
-  id          String @id @default(cuid())
+  id          String  @id @default(cuid())
   levelId     String
   description String
-  sortOrder   Int    @default(0)
+  note        String?
+  sortOrder   Int     @default(0)
   isCritical  Boolean @default(true)
 
   level Level @relation(fields: [levelId], references: [id], onDelete: Cascade)

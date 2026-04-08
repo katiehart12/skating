@@ -9,6 +9,7 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
+  // ── Admin ────────────────────────────────────────────────────────────────
   const adminEmail = process.env.DEFAULT_ADMIN_EMAIL;
   const adminPassword = process.env.DEFAULT_ADMIN_PASSWORD;
   if (!adminEmail || !adminPassword) {
@@ -24,9 +25,7 @@ async function main() {
         name: "Admin",
         role: UserRole.ADMIN,
         passwordHash,
-        adminProfile: {
-          create: {},
-        },
+        adminProfile: { create: {} },
       },
     });
     console.log(`Seeded admin: ${user.email}`);
@@ -34,73 +33,248 @@ async function main() {
     console.log(`Admin already exists: ${existingAdmin.email}`);
   }
 
-  // Minimal defaults so the UI has something to work with immediately.
+  // ── Demo instructor ──────────────────────────────────────────────────────
+  let instructorProfile = await prisma.instructorProfile.findFirst({
+    where: { user: { email: "instructor@skating.local" } },
+  });
+  if (!instructorProfile) {
+    const hash = await bcrypt.hash("instructor123", 10);
+    const u = await prisma.user.create({
+      data: {
+        email: "instructor@skating.local",
+        name: "Sarah Miller",
+        role: UserRole.INSTRUCTOR,
+        passwordHash: hash,
+        instructorProfile: { create: {} },
+      },
+      include: { instructorProfile: true },
+    });
+    instructorProfile = u.instructorProfile!;
+    console.log("Seeded instructor: instructor@skating.local / instructor123");
+  } else {
+    console.log("Instructor already exists.");
+  }
+
+  // ── Demo parent + kid ────────────────────────────────────────────────────
+  let kidProfile = await prisma.kidProfile.findFirst({
+    where: { user: { email: "kid@skating.local" } },
+  });
+  if (!kidProfile) {
+    // Parent
+    const parentHash = await bcrypt.hash("parent123", 10);
+    const parentUser = await prisma.user.create({
+      data: {
+        email: "parent@skating.local",
+        name: "Jordan Smith",
+        role: UserRole.PARENT,
+        passwordHash: parentHash,
+        parentProfile: { create: { displayName: "Jordan Smith" } },
+      },
+      include: { parentProfile: true },
+    });
+
+    // Kid
+    const kidHash = await bcrypt.hash("kid123", 10);
+    const kidUser = await prisma.user.create({
+      data: {
+        email: "kid@skating.local",
+        name: "Alex Smith",
+        role: UserRole.KID,
+        passwordHash: kidHash,
+        kidProfile: { create: { displayName: "Alex Smith" } },
+      },
+      include: { kidProfile: true },
+    });
+    kidProfile = kidUser.kidProfile!;
+
+    // Link parent ↔ kid
+    await prisma.parentKid.create({
+      data: {
+        parentId: parentUser.parentProfile!.id,
+        kidId: kidProfile.id,
+      },
+    });
+    console.log("Seeded parent: parent@skating.local / parent123");
+    console.log("Seeded kid: Alex Smith");
+  } else {
+    console.log("Demo kid already exists.");
+  }
+
+  // ── Rink map + locations ─────────────────────────────────────────────────
   const existingRinkMap = await prisma.rinkMap.findFirst({ where: { name: "Default Rink" } });
-  const rinkMap = existingRinkMap ?? (await prisma.rinkMap.create({ data: { name: "Default Rink", imageUrl: "/rink.png" } }));
+  const rinkMap =
+    existingRinkMap ??
+    (await prisma.rinkMap.create({ data: { name: "Default Rink", imageUrl: "/rink.png" } }));
 
-  // Create two sample ice locations if they don't exist.
-  const locations = [
-    { name: "North", xPercent: 0, yPercent: 0, wPercent: 50, hPercent: 50 },
-    { name: "South", xPercent: 50, yPercent: 50, wPercent: 50, hPercent: 50 },
+  const locationDefs = [
+    { name: "North", xPercent: 0, yPercent: 0, wPercent: 100, hPercent: 50 },
+    { name: "South", xPercent: 0, yPercent: 50, wPercent: 100, hPercent: 50 },
   ];
-
-  for (const loc of locations) {
+  const locationIds: Record<string, string> = {};
+  for (const loc of locationDefs) {
     const existing = await prisma.iceLocation.findFirst({
       where: { rinkMapId: rinkMap.id, name: loc.name },
     });
-    if (!existing) {
-      await prisma.iceLocation.create({
-        data: {
-          rinkMapId: rinkMap.id,
-          name: loc.name,
-          xPercent: loc.xPercent,
-          yPercent: loc.yPercent,
-          wPercent: loc.wPercent,
-          hPercent: loc.hPercent,
-        },
-      });
-    }
+    const created =
+      existing ??
+      (await prisma.iceLocation.create({
+        data: { rinkMapId: rinkMap.id, ...loc },
+      }));
+    locationIds[loc.name] = created.id;
   }
 
-  // Seed a 3-level chain.
+  // ── Level 5 (real skills from the paper end-card) ────────────────────────
   const getOrCreateLevel = async (name: string, sortOrder: number) => {
     const existing = await prisma.level.findFirst({ where: { name } });
     if (existing) return existing;
     return prisma.level.create({ data: { name, sortOrder } });
   };
 
-  const beginner = await getOrCreateLevel("Beginner", 0);
-  const intermediate = await getOrCreateLevel("Intermediate", 1);
-  const advanced = await getOrCreateLevel("Advanced", 2);
+  const level5 = await getOrCreateLevel("Level 5", 5);
 
-  await prisma.level.updateMany({ where: { id: beginner.id }, data: { nextLevelId: intermediate.id } });
-  await prisma.level.updateMany({ where: { id: intermediate.id }, data: { nextLevelId: advanced.id } });
+  // Assign kid to Level 5
+  await prisma.kidProfile.update({
+    where: { id: kidProfile.id },
+    data: { currentLevelId: level5.id },
+  });
 
-  // Level skills
-  const skillSets: Array<{ levelId: string; skills: string[] }> = [
-    { levelId: beginner.id, skills: ["Basic forwards", "Basic backwards", "Stopping"] },
+  const level5Skills = [
     {
-      levelId: intermediate.id,
-      skills: ["Turns", "Crossovers", "Controlled stopping"],
+      description: "2-foot turn forward to backward (moving)",
+      note: "Moving in a circle, turn from forward to backward, clockwise & counter clockwise",
+      sortOrder: 0,
+      isCritical: true,
     },
-    { levelId: advanced.id, skills: ["Speed", "Advanced turns", "Routine skills"] },
+    {
+      description: "Beginning forward crossovers (5 C & CC)",
+      note: "Forward pump, crossover & hold cross-footed position / five consecutive",
+      sortOrder: 1,
+      isCritical: true,
+    },
+    {
+      description: "Backward one-foot glide (R & L)",
+      note: "Backward skating followed by a glide held for a count of four - six",
+      sortOrder: 2,
+      isCritical: true,
+    },
+    {
+      description: "Backward snowplow stop (moving)",
+      note: "B. skating followed by a complete stop with one foot & a three-second hold",
+      sortOrder: 3,
+      isCritical: true,
+    },
+    {
+      description: "Side-toe hop (both directions) / two-foot hop",
+      note: "Hop to the side from one toe to the other / Hockey skaters may do a 2-foot hop",
+      sortOrder: 4,
+      isCritical: false,
+    },
+    {
+      description: "Backward stroking (width of rink)",
+      note: "Push from inside edge, hold free foot in front / strong glides in between pushes",
+      sortOrder: 5,
+      isCritical: true,
+    },
+    {
+      description: "Two-foot spin",
+      note: "Optional entry, minimum of four revolutions",
+      sortOrder: 6,
+      isCritical: false,
+    },
   ];
 
-  for (const set of skillSets) {
-    const existingCount = await prisma.levelSkill.count({ where: { levelId: set.levelId } });
-    if (existingCount > 0) continue;
-
-    for (let i = 0; i < set.skills.length; i++) {
-      await prisma.levelSkill.create({
-        data: {
-          levelId: set.levelId,
-          description: set.skills[i]!,
-          sortOrder: i,
-          isCritical: true,
-        },
-      });
+  const existingSkillCount = await prisma.levelSkill.count({ where: { levelId: level5.id } });
+  if (existingSkillCount === 0) {
+    for (const skill of level5Skills) {
+      await prisma.levelSkill.create({ data: { levelId: level5.id, ...skill } });
     }
+    console.log("Seeded Level 5 skills.");
+  } else {
+    console.log("Level 5 skills already exist.");
   }
+
+  // ── Class template → session → occurrence → session occurrence ───────────
+  // Wednesday (dayOfWeek=3), 5:30–6:20 PM
+  let template = await prisma.classTemplate.findFirst({ where: { name: "Wednesday Level 5" } });
+  if (!template) {
+    template = await prisma.classTemplate.create({
+      data: {
+        name: "Wednesday Level 5",
+        dayOfWeek: 3,
+        startTime: "17:30",
+        endTime: "18:20",
+      },
+    });
+  }
+
+  // Class session: Level 5, North end of rink
+  let classSession = await prisma.classSession.findFirst({
+    where: { classTemplateId: template.id, levelId: level5.id },
+  });
+  if (!classSession) {
+    classSession = await prisma.classSession.create({
+      data: {
+        classTemplateId: template.id,
+        levelId: level5.id,
+        iceLocationId: locationIds["North"]!,
+      },
+    });
+  }
+
+  // Assign instructor to the class session
+  const existingInstructorLink = await prisma.classSessionInstructor.findFirst({
+    where: { classSessionId: classSession.id, instructorId: instructorProfile.id },
+  });
+  if (!existingInstructorLink) {
+    await prisma.classSessionInstructor.create({
+      data: { classSessionId: classSession.id, instructorId: instructorProfile.id },
+    });
+  }
+
+  // Create a class occurrence for today (or the next upcoming Wednesday)
+  const today = new Date();
+  const dayOfWeek = today.getUTCDay();
+  const daysUntilWed = (3 - dayOfWeek + 7) % 7; // 0 if today is Wednesday
+  const occurrenceDate = new Date(
+    Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + daysUntilWed),
+  );
+
+  let classOccurrence = await prisma.classOccurrence.findFirst({
+    where: { classTemplateId: template.id, date: occurrenceDate },
+  });
+  if (!classOccurrence) {
+    classOccurrence = await prisma.classOccurrence.create({
+      data: { classTemplateId: template.id, date: occurrenceDate },
+    });
+  }
+
+  // Session occurrence
+  let sessionOccurrence = await prisma.classSessionOccurrence.findFirst({
+    where: { classOccurrenceId: classOccurrence.id, classSessionId: classSession.id },
+  });
+  if (!sessionOccurrence) {
+    sessionOccurrence = await prisma.classSessionOccurrence.create({
+      data: { classOccurrenceId: classOccurrence.id, classSessionId: classSession.id },
+    });
+  }
+  console.log(`Session occurrence ID (for instructor URL): ${sessionOccurrence.id}`);
+
+  // Enroll kid in the session occurrence
+  const existingEnrollment = await prisma.kidSessionEnrollment.findFirst({
+    where: { kidId: kidProfile.id, sessionOccurrenceId: sessionOccurrence.id },
+  });
+  if (!existingEnrollment) {
+    await prisma.kidSessionEnrollment.create({
+      data: { kidId: kidProfile.id, sessionOccurrenceId: sessionOccurrence.id },
+    });
+    console.log("Enrolled Alex Smith in Wednesday Level 5 session.");
+  }
+
+  console.log("\n── Demo login credentials ──────────────────────────");
+  console.log("Admin:      admin@skating.local      / admin12345");
+  console.log("Instructor: instructor@skating.local / instructor123");
+  console.log("Parent:     parent@skating.local     / parent123");
+  console.log(`\nInstructor end-card URL: /instructor/session-occurrences/${sessionOccurrence.id}`);
 }
 
 main()
@@ -110,4 +284,3 @@ main()
     await prisma.$disconnect();
     process.exit(1);
   });
-

@@ -10,6 +10,10 @@ export default function Navbar() {
   const router = useRouter();
   const { data, status } = useSession();
   const role = (data?.user as any)?.role as string | undefined;
+  const displayName =
+    (data?.user as any)?.name ||
+    (data?.user as any)?.email ||
+    "Account";
   const [mounted, setMounted] = useState(false);
 
   const isAuthed = status === "authenticated" && !!data?.user;
@@ -39,7 +43,7 @@ export default function Navbar() {
           </span>
         </div>
 
-        <nav className="flex items-center gap-3">
+        <nav className="flex items-center gap-3" suppressHydrationWarning>
           {!mounted ? (
             <>
               <Link
@@ -57,6 +61,9 @@ export default function Navbar() {
             </>
           ) : isAuthed ? (
             <>
+              <span className="hidden sm:inline-flex text-sm text-sky-950/80">
+                Hi, <span className="font-medium text-sky-950">{displayName}</span>
+              </span>
               <button
                 type="button"
                 onClick={goToDashboard}

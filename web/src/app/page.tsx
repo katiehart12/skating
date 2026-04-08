@@ -78,23 +78,23 @@ export default function Home() {
           <h2 className="text-xl font-semibold mb-3">Address / Contact</h2>
           <div className="text-sm text-zinc-700 space-y-2">
             <div>
-              <div className="font-medium">Address</div>
+              <div className="font-bold text-sky-950">Address</div>
               <div>2100 S. Henderson St, Bloomington IN 47401</div>
             </div>
             <div>
-              <div className="font-medium">Phone</div>
+              <div className="font-bold text-sky-950">Phone</div>
               <div>(812) 349-3740</div>
             </div>
             <div>
-              <div className="font-medium">Fax</div>
+              <div className="font-bold text-sky-950">Fax</div>
               <div>(812) 349-3705</div>
             </div>
             <div>
-              <div className="font-medium">Email</div>
+              <div className="font-bold text-sky-950">Email</div>
               <div>parks@bloomington.in.gov</div>
             </div>
             <div>
-              <div className="font-medium">Facebook</div>
+              <div className="font-bold text-sky-950">Facebook</div>
               <div>Connect on Facebook</div>
             </div>
             <div className="pt-2 text-xs text-zinc-500">
@@ -107,7 +107,7 @@ export default function Home() {
           <h2 className="text-xl font-semibold mb-3">About The Frank</h2>
           <div className="text-sm text-zinc-700 space-y-4">
             <div>
-              <div className="font-medium">Staff</div>
+              <div className="font-bold text-sky-950">Staff</div>
               <div className="mt-1">
                 <div>
                   Sports Facility/Program Manager: Chris Hamric, 812-349-3740 or email{" "}
@@ -121,7 +121,7 @@ export default function Home() {
             </div>
 
             <div>
-              <div className="font-medium">Bus Line</div>
+              <div className="font-bold text-sky-950">Bus Line</div>
               <div>Bloomington Transit #7 drops at North and Henderson Streets.</div>
               <div className="mt-1">Frank Southern Ice Arena is located at 2100 S. Henderson St.</div>
             </div>

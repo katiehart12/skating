@@ -98,13 +98,6 @@ export default function Navbar() {
                     ? "bg-sky-950 text-white"
                     : "bg-sky-700 text-white hover:bg-sky-800"
                 }`}
-              <span className="hidden sm:inline-flex text-sm text-sky-950/80">
-                Hi, <span className="font-medium text-sky-950">{displayName}</span>
-              </span>
-              <button
-                type="button"
-                onClick={goToDashboard}
-                className="text-sm rounded bg-sky-700 text-white px-3 py-1.5 hover:bg-sky-800"
               >
                 My Dashboard
               </Link>

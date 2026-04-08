@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { UserRole } from "@/generated/prisma/enums";
-
-const BodySchema = z.object({
-  email: z.string().email().max(120),
-  password: z.string().min(8).max(200),
-  displayName: z.string().max(120).nullable().optional(),
-});
+import { SignupBodySchema as BodySchema } from "@/lib/schemas/signup";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();

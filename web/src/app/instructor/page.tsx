@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
@@ -43,18 +44,24 @@ export default function InstructorPage() {
       ) : (
         <div className="flex flex-col gap-3">
           {sessionOccurrences.map((so) => (
-            <a
+            <Link
               key={so.id}
               href={`/instructor/session-occurrences/${so.id}`}
-              className="border rounded p-3 bg-white shadow hover:bg-zinc-50"
+              className="border rounded p-3 bg-white shadow hover:bg-sky-50 hover:border-sky-200 transition-colors"
             >
               <div className="font-medium">
-                {so.classOccurrence.classTemplate.name} - {new Date(so.classOccurrence.date).toLocaleDateString()}
+                {so.classOccurrence.classTemplate.name} —{" "}
+                {new Date(so.classOccurrence.date).toLocaleDateString(undefined, {
+                  weekday: "long",
+                  month: "short",
+                  day: "numeric",
+                })}
               </div>
               <div className="text-sm text-zinc-600 mt-1">
-                {so.classSession.level.name} | {so.classSession.iceLocation.name} | {so.classOccurrence.classTemplate.startTime}-{so.classOccurrence.classTemplate.endTime}
+                {so.classSession.level.name} · {so.classSession.iceLocation.name} ·{" "}
+                {so.classOccurrence.classTemplate.startTime}–{so.classOccurrence.classTemplate.endTime}
               </div>
-            </a>
+            </Link>
           ))}
         </div>
       )}

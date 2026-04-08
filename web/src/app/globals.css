@@ -1,8 +1,27 @@
 @import "tailwindcss";
 
+/* ── Brand color tokens ─────────────────────────────────────────────────── */
 :root {
   --background: #eaf7ff;
   --foreground: #06283d;
+
+  /* Ice-arena navy + sky palette */
+  --brand-navy: #0a1f3d;
+  --brand-ice: #0ea5e9;
+  --brand-frost: #e0f2fe;
+
+  /* Status colors */
+  --status-present: #16a34a;
+  --status-present-bg: #dcfce7;
+  --status-absent: #dc2626;
+  --status-absent-bg: #fee2e2;
+  --status-late: #d97706;
+  --status-late-bg: #fef3c7;
+  --status-pending: #7c3aed;
+  --status-pending-bg: #ede9fe;
+
+  /* Focus ring */
+  --ring-color: rgba(14, 165, 233, 0.4);
 }
 
 @theme inline {
@@ -16,11 +35,122 @@
   :root {
     --background: #071626;
     --foreground: #e8f2ff;
+    --brand-frost: #0c2d48;
   }
 }
 
+/* ── Base ───────────────────────────────────────────────────────────────── */
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* ── Focus rings ────────────────────────────────────────────────────────── */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--brand-ice);
+  outline-offset: 1px;
+  box-shadow: 0 0 0 3px var(--ring-color);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--brand-ice);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px var(--ring-color);
+}
+
+/* ── Smooth transitions ─────────────────────────────────────────────────── */
+a,
+button,
+input,
+select,
+textarea {
+  transition-property: background-color, border-color, color, box-shadow, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+/* ── Status badges ──────────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.badge-present {
+  color: var(--status-present);
+  background: var(--status-present-bg);
+}
+
+.badge-absent {
+  color: var(--status-absent);
+  background: var(--status-absent-bg);
+}
+
+.badge-late {
+  color: var(--status-late);
+  background: var(--status-late-bg);
+}
+
+.badge-pending {
+  color: var(--status-pending);
+  background: var(--status-pending-bg);
+}
+
+.badge-neutral {
+  color: #374151;
+  background: #f3f4f6;
+}
+
+/* ── Card with ice-accent top border ────────────────────────────────────── */
+.card {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e0f2fe;
+  overflow: hidden;
+}
+
+.card-accent {
+  border-top: 3px solid var(--brand-ice);
+}
+
+/* ── Reusable form input style ──────────────────────────────────────────── */
+.field {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  background: white;
+  color: var(--foreground);
+}
+
+.field:hover {
+  border-color: #94a3b8;
+}
+
+/* ── Scrollbar polish ───────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #bae6fd;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #7dd3fc;
 }

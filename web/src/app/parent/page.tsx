@@ -34,10 +34,10 @@ export default function ParentPage() {
       const k = kidsJson.kids ?? [];
       setKids(k);
       setItems(scheduleJson.items ?? []);
-      if (!activeKidId && k[0]?.kidId) setActiveKidId(k[0].kidId);
+      if (k[0]?.kidId) setActiveKidId((prev) => prev || k[0].kidId);
     }
     load();
-  }, [activeKidId, role, status]);
+  }, [role, status]);
 
   const filtered = useMemo(() => {
     if (!activeKidId) return items;

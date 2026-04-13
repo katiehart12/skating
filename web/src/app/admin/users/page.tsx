@@ -60,10 +60,6 @@ export default function AdminUsersPage() {
     load();
   }, [currentLevelId, role, status, userRole]);
 
-  useEffect(() => {
-    if (userRole !== "KID" && !displayName) return;
-  }, [displayName, userRole]);
-
   async function createUser(e: FormEvent) {
     e.preventDefault();
     setError(null);

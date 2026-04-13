@@ -3,14 +3,24 @@
 import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { data } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  function getDashboardHref(userRole?: string) {
+    if (userRole === "ADMIN") return "/admin";
+    if (userRole === "INSTRUCTOR") return "/instructor";
+    if (userRole === "PARENT") return "/parent";
+    if (userRole === "KID") return "/kid";
+    return "/";
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,7 +39,8 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/");
+    const role = (data?.user as any)?.role as string | undefined;
+    router.push(getDashboardHref(role));
   }
 
   return (

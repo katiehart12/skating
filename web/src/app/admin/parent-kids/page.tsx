@@ -34,7 +34,7 @@ export default function ParentKidsPage() {
 
   const selectedParent = useMemo(
     () => parents.find((p) => p.parentProfileId === selectedParentProfileId),
-    [kids, parents, selectedParentProfileId],
+    [parents, selectedParentProfileId],
   );
 
   useEffect(() => {

@@ -2,10 +2,16 @@ import bcrypt from "bcryptjs";
 import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { UserRole } from "../src/generated/prisma/enums";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+
+import { PrismaPg } from "@prisma/adapter-pg";
+
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  throw new Error("Missing DATABASE_URL in environment");
+}
 
 const prisma = new PrismaClient({
-  adapter: new PrismaBetterSqlite3({ url: process.env.DATABASE_URL! }),
+  adapter: new PrismaPg({ connectionString: databaseUrl }),
 });
 
 async function main() {

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { AdminNav } from "./components/AdminNav";
 
 type LevelWithSkills = {
   id: string;
@@ -16,6 +18,7 @@ export default function AdminDashboard() {
   const role = (data?.user as any)?.role as string | undefined;
 
   const [levels, setLevels] = useState<LevelWithSkills[]>([]);
+  const [summary, setSummary] = useState<any | null>(null);
   const [name, setName] = useState("");
   const [skillsRaw, setSkillsRaw] = useState("Basic forwards\nStopping\n");
   const [loading, setLoading] = useState(false);
@@ -26,13 +29,20 @@ export default function AdminDashboard() {
       if (status !== "authenticated") return;
       if (role !== "ADMIN") return;
 
-      const res = await fetch("/api/admin/levels", { method: "GET" });
-      if (!res.ok) {
-        setError("Failed to load levels.");
+      const [levelsRes, summaryRes] = await Promise.all([
+        fetch("/api/admin/levels", { method: "GET" }),
+        fetch("/api/admin/summary", { method: "GET" }),
+      ]);
+
+      if (!levelsRes.ok || !summaryRes.ok) {
+        setError("Failed to load admin dashboard data.");
         return;
       }
-      const json = await res.json();
-      setLevels(json.levels ?? []);
+
+      const levelsJson = await levelsRes.json();
+      const summaryJson = await summaryRes.json();
+      setLevels(levelsJson.levels ?? []);
+      setSummary(summaryJson.counts ?? null);
     }
     load();
   }, [role, status]);
@@ -52,7 +62,8 @@ export default function AdminDashboard() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           name,
-          sortOrder: 0,
+          sortOrder:
+            levels.length === 0 ? 0 : Math.max(...levels.map((l) => l.sortOrder)) + 1,
           skills,
         }),
       });
@@ -77,10 +88,72 @@ export default function AdminDashboard() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-1">Admin</h1>
-      <p className="text-zinc-600 mb-6">
-        Sports Management & Logistics (MVP)
-      </p>
+      <div className="flex items-start justify-between gap-4 mb-2">
+        <div>
+          <h1 className="text-2xl font-semibold mb-1">Admin Dashboard</h1>
+          <p className="text-zinc-600">
+            Setup + manage levels, classes, users, locations, attendance, and ice shows.
+          </p>
+        </div>
+      </div>
+
+      <AdminNav />
+
+      {summary ? (
+        <section className="bg-white shadow rounded p-4 mb-6">
+          <h2 className="text-lg font-semibold mb-3">Overview</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="border rounded p-3 text-sm">
+              <div className="text-zinc-600">Users</div>
+              <div className="font-medium">
+                Admins: {summary.usersByRole?.ADMIN ?? 0} · Instructors: {summary.usersByRole?.INSTRUCTOR ?? 0} · Parents: {summary.usersByRole?.PARENT ?? 0} · Kids: {summary.usersByRole?.KID ?? 0}
+              </div>
+              <div className="text-zinc-600 mt-1">
+                Parent↔Kid links: <span className="font-medium">{summary.parentKidsLinks ?? 0}</span>
+              </div>
+            </div>
+            <div className="border rounded p-3 text-sm">
+              <div className="text-zinc-600">Setup</div>
+              <div className="font-medium">
+                Levels: {summary.levels ?? 0} · Skills: {summary.levelSkills ?? 0}
+              </div>
+              <div className="text-zinc-600 mt-1">
+                Ice locations: <span className="font-medium">{summary.iceLocations ?? 0}</span> · Templates: <span className="font-medium">{summary.templates ?? 0}</span>
+              </div>
+              <div className="text-zinc-600 mt-1">
+                Occurrences: <span className="font-medium">{summary.occurrences ?? 0}</span> · Session occurrences: <span className="font-medium">{summary.sessionOccurrences ?? 0}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      <section className="bg-white shadow rounded p-4 mb-6">
+        <h2 className="text-lg font-semibold mb-3">Recommended setup order</h2>
+        <ol className="list-decimal pl-5 text-sm text-zinc-700 space-y-1">
+          <li>
+            Create <Link className="underline" href="/admin">Levels</Link>
+          </li>
+          <li>
+            Create <Link className="underline" href="/admin/ice-locations">Ice Locations</Link>
+          </li>
+          <li>
+            Create <Link className="underline" href="/admin/users">Users</Link> (Kids, Parents, Instructors)
+          </li>
+          <li>
+            Link <Link className="underline" href="/admin/parent-kids">Parents ↔ Kids</Link>
+          </li>
+          <li>
+            Create <Link className="underline" href="/admin/class-templates">Class Templates</Link> and session groups
+          </li>
+          <li>
+            Create <Link className="underline" href="/admin/occurrences">Occurrences</Link>
+          </li>
+          <li>
+            Enroll kids + mark attendance/end cards from each session occurrence (from the Occurrences page)
+          </li>
+        </ol>
+      </section>
 
       <section className="bg-white shadow rounded p-4 mb-6">
         <h2 className="text-lg font-semibold mb-3">Create Level</h2>

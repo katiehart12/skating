@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useSession } from "next-auth/react";
+import { AdminNav } from "../components/AdminNav";
 
 type LevelSkill = { id: string; description: string; sortOrder: number };
 type Level = { id: string; name: string; sortOrder: number; levelSkills: LevelSkill[] };
@@ -184,14 +185,7 @@ export default function ClassTemplatesPage() {
         </div>
       </div>
 
-      <nav className="mb-6 flex gap-3 text-sm">
-        <a className="underline" href="/admin">
-          Levels
-        </a>
-        <a className="underline" href="/admin/occurrences">
-          Occurrences
-        </a>
-      </nav>
+      <AdminNav />
 
       {error ? <div className="text-red-600 text-sm mb-3">{error}</div> : null}
 
@@ -227,6 +221,7 @@ export default function ClassTemplatesPage() {
                 Start time
                 <input
                   className="border rounded p-2"
+                  type="time"
                   value={tplStart}
                   onChange={(e) => setTplStart(e.target.value)}
                   required
@@ -236,6 +231,7 @@ export default function ClassTemplatesPage() {
                 End time
                 <input
                   className="border rounded p-2"
+                  type="time"
                   value={tplEnd}
                   onChange={(e) => setTplEnd(e.target.value)}
                   required

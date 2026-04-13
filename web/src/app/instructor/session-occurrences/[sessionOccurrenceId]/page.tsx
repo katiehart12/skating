@@ -127,6 +127,12 @@ export default function InstructorSessionOccurrencePage() {
         <h1 className="text-2xl font-semibold">End Cards</h1>
       </div>
 
+      <div className="mb-4">
+        <a className="text-sm underline text-zinc-700" href="/instructor">
+          Back to Instructor Dashboard
+        </a>
+      </div>
+
       {error ? <div className="text-red-600 text-sm mb-3">{error}</div> : null}
 
       {enrollments.length === 0 ? (

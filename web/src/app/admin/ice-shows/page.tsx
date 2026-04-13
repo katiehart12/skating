@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
+import { AdminNav } from "../components/AdminNav";
 
 type UserRole = "ADMIN" | "INSTRUCTOR" | "KID" | "PARENT";
 
@@ -25,8 +26,8 @@ type Part = {
   iceLocation: IceLocation;
   startTime: string | null;
   endTime: string | null;
-  instructors: Array<{ id: string; instructor: { user: { email: string; name: string | null } } }>;
-  enrollments: Array<{ id: string; kid: { id: string; displayName: string } }>;
+  instructors: Array<{ id: string; instructorId: string; instructor: { user: { email: string; name: string | null } } }>;
+  enrollments: Array<{ id: string; kidId: string; kid: { id: string; displayName: string } }>;
 };
 
 export default function IceShowsAdminPage() {
@@ -122,10 +123,10 @@ export default function IceShowsAdminPage() {
       return;
     }
     setSelectedInstructorProfileIds(
-      (selectedPart.instructors ?? []).map((pi: any) => pi.instructorId ?? pi.instructor?.id ?? pi.id),
+      (selectedPart.instructors ?? []).map((pi: any) => pi.instructorId),
     );
     setSelectedKidProfileIds(
-      (selectedPart.enrollments ?? []).map((en: any) => en.kidId ?? en.kid?.id ?? en.id),
+      (selectedPart.enrollments ?? []).map((en: any) => en.kidId),
     );
   }, [selectedPart]);
 
@@ -247,6 +248,8 @@ export default function IceShowsAdminPage() {
         </div>
       </div>
 
+      <AdminNav />
+
       {error ? <div className="text-red-600 text-sm mb-3">{error}</div> : null}
 
       <section className="bg-white shadow rounded p-4 mb-6">
@@ -262,11 +265,11 @@ export default function IceShowsAdminPage() {
           </label>
           <label className="flex flex-col gap-1 text-sm">
             Start time
-            <input className="border rounded p-2" value={showStartTime} onChange={(e) => setShowStartTime(e.target.value)} required />
+            <input className="border rounded p-2" type="time" value={showStartTime} onChange={(e) => setShowStartTime(e.target.value)} required />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             End time
-            <input className="border rounded p-2" value={showEndTime} onChange={(e) => setShowEndTime(e.target.value)} required />
+            <input className="border rounded p-2" type="time" value={showEndTime} onChange={(e) => setShowEndTime(e.target.value)} required />
           </label>
           <label className="flex flex-col gap-1 text-sm md:col-span-2">
             Notes (costume/check-in)
@@ -326,11 +329,11 @@ export default function IceShowsAdminPage() {
                 </label>
                 <label className="flex flex-col gap-1 text-sm">
                   Start time (optional)
-                  <input className="border rounded p-2" value={partStartTime} onChange={(e) => setPartStartTime(e.target.value)} placeholder="e.g., 18:30" />
+                  <input className="border rounded p-2" type="time" value={partStartTime} onChange={(e) => setPartStartTime(e.target.value)} />
                 </label>
                 <label className="flex flex-col gap-1 text-sm">
                   End time (optional)
-                  <input className="border rounded p-2" value={partEndTime} onChange={(e) => setPartEndTime(e.target.value)} placeholder="e.g., 19:20" />
+                  <input className="border rounded p-2" type="time" value={partEndTime} onChange={(e) => setPartEndTime(e.target.value)} />
                 </label>
                 <button type="submit" className="bg-sky-950 text-white rounded px-3 py-2 hover:bg-indigo-950">
                   Create part

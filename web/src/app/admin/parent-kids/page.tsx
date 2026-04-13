@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
+import { AdminNav } from "../components/AdminNav";
 
 type UserRole = "PARENT" | "KID";
 
@@ -116,6 +117,8 @@ export default function ParentKidsPage() {
       <div className="text-sm text-zinc-600 mb-6">
         Connect parents to kids so they can view schedules and end cards.
       </div>
+
+      <AdminNav />
 
       {error ? <div className="text-red-600 text-sm mb-3">{error}</div> : null}
 

@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 
 type EndCard = {
+  id: string;
+  kidId: string;
   kid: { displayName: string; user: { email: string } };
   passed: boolean;
   instructorNote: string | null;
@@ -52,8 +54,8 @@ export default function PrintSessionOccurrencePage() {
         {endCards.length === 0 ? (
           <div className="text-zinc-600">No end cards found.</div>
         ) : (
-          endCards.map((c, idx) => (
-            <div key={idx} className="border rounded p-3">
+          endCards.map((c) => (
+            <div key={c.id ?? c.kidId ?? c.kid.user.email} className="border rounded p-3">
               <div className="font-medium text-lg">{c.kid.displayName}</div>
               <div className="text-sm text-zinc-600">{c.kid.user.email}</div>
               <div className="text-sm mt-2">
@@ -70,8 +72,8 @@ export default function PrintSessionOccurrencePage() {
                 <ul className="list-disc pl-5 space-y-1">
                   {c.acquiredSkills
                     .filter((s) => s.acquired)
-                    .map((s, i) => (
-                      <li key={i}>{s.levelSkill.description}</li>
+                    .map((s) => (
+                      <li key={s.levelSkill.description}>{s.levelSkill.description}</li>
                     ))}
                   {c.acquiredSkills.filter((s) => s.acquired).length === 0 ? (
                     <li className="text-zinc-500">No skills marked yet.</li>

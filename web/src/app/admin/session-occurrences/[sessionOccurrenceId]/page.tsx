@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { AdminNav } from "../../components/AdminNav";
 
 type Enrollment = {
   id: string;
@@ -238,6 +239,8 @@ export default function SessionOccurrenceAdminPage() {
         <h1 className="text-2xl font-semibold">Session Occurrence</h1>
         <div className="text-sm text-zinc-600">Attendance + End Cards</div>
       </div>
+
+      <AdminNav />
 
       <nav className="mb-4 flex gap-3 text-sm">
         <a className="underline" href="/admin/occurrences">

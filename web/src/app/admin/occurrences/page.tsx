@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useSession } from "next-auth/react";
+import { AdminNav } from "../components/AdminNav";
 
 type Occurrence = {
   id: string;
@@ -119,14 +120,7 @@ export default function OccurrencesPage() {
         <h1 className="text-2xl font-semibold">Occurrences</h1>
       </div>
 
-      <nav className="mb-6 flex gap-3 text-sm">
-        <a className="underline" href="/admin">
-          Levels
-        </a>
-        <a className="underline" href="/admin/class-templates">
-          Templates
-        </a>
-      </nav>
+      <AdminNav />
 
       {error ? <div className="text-red-600 text-sm mb-3">{error}</div> : null}
 

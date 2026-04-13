@@ -2,6 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
+import { PUBLIC_ADMIN_CONTACT } from "@/lib/publicConfig";
 
 export default function ParentPage() {
   const { data, status } = useSession();
@@ -43,6 +44,8 @@ export default function ParentPage() {
     return items.filter((it) => it.kidId === activeKidId);
   }, [activeKidId, items]);
 
+  const showExamples = kids.length === 0 || items.length === 0;
+
   if (status === "loading") return <div className="p-6">Loading...</div>;
   if (role !== "PARENT") return <div className="p-6">Not authorized.</div>;
 
@@ -71,15 +74,20 @@ export default function ParentPage() {
             <div className="border border-sky-200 rounded p-3 bg-sky-50/50">
               <div className="text-sm font-medium text-sky-950">Contact your skating school admin</div>
               <div className="text-sm text-zinc-700 mt-2 space-y-1">
-                <div>
-                  <span className="font-medium">Email:</span> admin@frankskating.local
-                </div>
-                <div>
-                  <span className="font-medium">Phone:</span> (812) 349-3740
-                </div>
-                <div className="text-xs text-zinc-600 pt-1">
-                  (Example contact info for MVP — replace with your school’s real admin contact.)
-                </div>
+                {PUBLIC_ADMIN_CONTACT.email ? (
+                  <div>
+                    <span className="font-medium">Email:</span> {PUBLIC_ADMIN_CONTACT.email}
+                  </div>
+                ) : (
+                  <div>
+                    <span className="font-medium">Email:</span> Ask the rink front desk or your coach for the correct admin email.
+                  </div>
+                )}
+                {PUBLIC_ADMIN_CONTACT.phone ? (
+                  <div>
+                    <span className="font-medium">Phone:</span> {PUBLIC_ADMIN_CONTACT.phone}
+                  </div>
+                ) : null}
               </div>
             </div>
 
@@ -114,68 +122,70 @@ export default function ParentPage() {
         </div>
       )}
 
-      <section className="bg-white shadow rounded p-4 mt-4">
-        <h2 className="font-semibold mb-2 text-sky-950">Levels & Classes (examples)</h2>
-        <div className="text-sm text-zinc-700">
-          Here’s how most skating schools structure levels and sessions. These are sample descriptions to help parents understand what to expect.
-        </div>
-
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div className="border border-sky-200 rounded p-3 bg-sky-50/50">
-            <div className="text-sm font-medium text-sky-950">Example levels</div>
-            <ul className="text-sm text-zinc-700 mt-2 space-y-2">
-              <li>
-                <span className="font-medium">Beginner:</span> balance, safe falling, basic forward skating, stopping.
-              </li>
-              <li>
-                <span className="font-medium">Intermediate:</span> backward skating, turns, crossovers, controlled stops.
-              </li>
-              <li>
-                <span className="font-medium">Advanced:</span> speed control, advanced turns, performance/routine skills.
-              </li>
-            </ul>
+      {showExamples ? (
+        <section className="bg-white shadow rounded p-4 mt-4">
+          <h2 className="font-semibold mb-2 text-sky-950">Levels & Classes (examples)</h2>
+          <div className="text-sm text-zinc-700">
+            Here’s how most skating schools structure levels and sessions. These are sample descriptions to help parents understand what to expect.
           </div>
 
-          <div className="border border-sky-200 rounded p-3 bg-white">
-            <div className="text-sm font-medium text-sky-950">Example class format</div>
-            <ul className="text-sm text-zinc-700 mt-2 space-y-2">
-              <li>
-                <span className="font-medium">Weekly session:</span> one day/time slot (e.g., Wednesdays 6:30–7:20pm).
-              </li>
-              <li>
-                <span className="font-medium">Parallel levels:</span> multiple levels can run at the same time in different rink areas.
-              </li>
-              <li>
-                <span className="font-medium">End-card feedback:</span> instructors mark skills achieved and “pass/not yet” for next level.
-              </li>
-              <li>
-                <span className="font-medium">Make-ups (MVP):</span> if a class is missed, admin can record a one-off make-up via attendance notes.
-              </li>
-            </ul>
-          </div>
-        </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div className="border border-sky-200 rounded p-3 bg-sky-50/50">
+              <div className="text-sm font-medium text-sky-950">Example levels</div>
+              <ul className="text-sm text-zinc-700 mt-2 space-y-2">
+                <li>
+                  <span className="font-medium">Beginner:</span> balance, safe falling, basic forward skating, stopping.
+                </li>
+                <li>
+                  <span className="font-medium">Intermediate:</span> backward skating, turns, crossovers, controlled stops.
+                </li>
+                <li>
+                  <span className="font-medium">Advanced:</span> speed control, advanced turns, performance/routine skills.
+                </li>
+              </ul>
+            </div>
 
-        <div className="mt-4 border border-sky-200 rounded p-3 bg-sky-50/50">
-          <div className="text-sm font-medium text-sky-950">Sample weekly schedule blocks</div>
-          <div className="text-sm text-zinc-700 mt-2 grid gap-2 sm:grid-cols-2">
-            <div className="border border-sky-200 rounded p-2 bg-white">
-              Mon 5:30–6:20pm — Beginner / Intermediate
-            </div>
-            <div className="border border-sky-200 rounded p-2 bg-white">
-              Wed 6:30–7:20pm — Beginner / Intermediate / Advanced
-            </div>
-            <div className="border border-sky-200 rounded p-2 bg-white">
-              Sat 9:00–9:50am — Beginner / Intermediate
-            </div>
-            <div className="border border-sky-200 rounded p-2 bg-white">
-              Sat 10:00–10:50am — Advanced / Ice Show practice (seasonal)
+            <div className="border border-sky-200 rounded p-3 bg-white">
+              <div className="text-sm font-medium text-sky-950">Example class format</div>
+              <ul className="text-sm text-zinc-700 mt-2 space-y-2">
+                <li>
+                  <span className="font-medium">Weekly session:</span> one day/time slot (e.g., Wednesdays 6:30–7:20pm).
+                </li>
+                <li>
+                  <span className="font-medium">Parallel levels:</span> multiple levels can run at the same time in different rink areas.
+                </li>
+                <li>
+                  <span className="font-medium">End-card feedback:</span> instructors mark skills achieved and “pass/not yet” for next level.
+                </li>
+                <li>
+                  <span className="font-medium">Make-ups (MVP):</span> if a class is missed, admin can record a one-off make-up via attendance notes.
+                </li>
+              </ul>
             </div>
           </div>
-          <div className="text-xs text-zinc-600 mt-2">
-            (Examples only — your admin will set the real schedule and locations.)
+
+          <div className="mt-4 border border-sky-200 rounded p-3 bg-sky-50/50">
+            <div className="text-sm font-medium text-sky-950">Sample weekly schedule blocks</div>
+            <div className="text-sm text-zinc-700 mt-2 grid gap-2 sm:grid-cols-2">
+              <div className="border border-sky-200 rounded p-2 bg-white">
+                Mon 5:30–6:20pm — Beginner / Intermediate
+              </div>
+              <div className="border border-sky-200 rounded p-2 bg-white">
+                Wed 6:30–7:20pm — Beginner / Intermediate / Advanced
+              </div>
+              <div className="border border-sky-200 rounded p-2 bg-white">
+                Sat 9:00–9:50am — Beginner / Intermediate
+              </div>
+              <div className="border border-sky-200 rounded p-2 bg-white">
+                Sat 10:00–10:50am — Advanced / Ice Show practice (seasonal)
+              </div>
+            </div>
+            <div className="text-xs text-zinc-600 mt-2">
+              (Examples only — your admin will set the real schedule and locations.)
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       {kids.length === 0 ? null : (
         <section className="bg-white shadow rounded p-4">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useSession } from "next-auth/react";
+import { AdminNav } from "../components/AdminNav";
 
 type UserRole = "ADMIN" | "INSTRUCTOR" | "KID" | "PARENT";
 
@@ -107,17 +108,7 @@ export default function AdminUsersPage() {
         <div className="text-sm text-zinc-600">Create Kids, Instructors, Parents</div>
       </div>
 
-      <nav className="mb-6 flex gap-3 text-sm">
-        <a className="underline" href="/admin">
-          Levels
-        </a>
-        <a className="underline" href="/admin/class-templates">
-          Templates
-        </a>
-        <a className="underline" href="/admin/occurrences">
-          Occurrences
-        </a>
-      </nav>
+      <AdminNav />
 
       {error ? <div className="text-red-600 text-sm mb-3">{error}</div> : null}
 

@@ -9,6 +9,9 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // DIRECT_URL bypasses Supabase's PgBouncer pooler (port 6543) so that
+    // DDL statements in migrations work correctly. Use the direct connection
+    // string (port 5432) from your Supabase project settings here.
+    url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
   },
 });

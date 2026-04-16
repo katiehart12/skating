@@ -56,3 +56,13 @@ _Use this subsection or attach a separate doc and link it in the table above._
 - **App:** Next.js (App Router), TypeScript, Tailwind CSS
 - **Data:** Prisma ORM, SQLite (`web/prisma/`, `web/dev.db` after migrate)
 - **Auth:** NextAuth (credentials), bcrypt
+All four accounts are now seeded in the main repo's database. You should be able to log in:
+
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | `admin@skating.local` | `admin12345` |
+| Instructor | `instructor@skating.local` | `instructor123` |
+| Parent | `parent@skating.local` | `parent123` |
+| Kid | `kid@skating.local` | `kid123` |
+
+The problem was that the `note` field migration had only been applied to the worktree's database, not the main one where your dev server runs. It's all in sync now.
